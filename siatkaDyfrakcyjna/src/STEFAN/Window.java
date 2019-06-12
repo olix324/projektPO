@@ -1,0 +1,525 @@
+package STEFAN;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
+import java.awt.GridLayout;
+import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+public class Window extends JFrame implements KeyListener {
+
+	JMenu menu;
+	JMenuBar menuBar;
+	JMenuItem exit;
+	JMenuItem save;
+	JMenuItem read;
+	JMenuItem back;
+
+	String tytul;
+	JSlider slider;
+	JRadioButton dif;
+	JRadioButton user;
+	JTextField textfield;
+	JSpinner n; // to to ze strza³kami i to jest n ze wzoru - rz¹d widma(nr pr¹¿ka)
+	SpinnerModel value; // wartoœci dla d
+	JTextField d; // zmieni³am na d z n bo we wzorze d to sta³a siatki
+	JLabel label;
+	JLabel labelnr; // do pr¹¿ków
+	JLabel labeld; // opis do sta³ej siatki
+	JButton clear;
+	JButton language;
+	JButton night;
+	JButton start;
+
+	Animacja westPanel; // lewy
+	JPanel eastPanel; // prawy
+
+	JPanel sliderPanel;
+	JPanel siatkaPanel;
+	JPanel widmoPanel;
+	JPanel domyslnePanel1;
+	JPanel domyslnePanel2;
+	JPanel buttonPanel;
+
+	// Boolean isNight = true;
+	static final int SLIDER_MIN = ColorLight.low[0];
+	static final int SLIDER_MAX = ColorLight.low[ColorLight.low.length - 1];
+	static final int SLIDER_INIT = 380;
+
+	public Window() throws HeadlessException {
+		// TODO Auto-generated constructor stub
+		
+		this.addKeyListener(this);
+
+		// rozmiar okna, zamykanie i layout
+
+		this.setSize(800, 600);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		this.setLayout(new GridLayout(1, 2));
+
+		// koniec okna
+
+		tytul = new String();
+		tytul = "Symulacja siatki dyfrakcyjnej";
+		this.setTitle(tytul);
+
+		// menu
+		menuBar = new JMenuBar();
+		menuBar.setBackground(Color.ORANGE);
+		this.setJMenuBar(menuBar);
+
+		menu = new JMenu("Menu");
+		menu.setFont(new Font("Arial", Font.BOLD, 14));
+		menuBar.add(menu);
+
+		save = new JMenuItem("Zapis do pliku");
+		save.setFont(new Font("Arial", Font.BOLD, 14));
+		menu.add(save);
+		save.addActionListener(zapisz);
+
+		read = new JMenuItem("Wczytywanie z pliku");
+		read.setFont(new Font("Arial", Font.BOLD, 14));
+		menu.add(read);
+		read.addActionListener(wczytaj);
+
+		back = new JMenuItem("Cofnij");
+		back.setFont(new Font("Arial", Font.BOLD, 14));
+		menu.add(back);
+		// back.addActionListener(cofnij);
+
+		exit = new JMenuItem("Wyjscie");
+		exit.setFont(new Font("Arial", Font.BOLD, 14));
+		menu.add(exit);
+		exit.addActionListener(wyjscie);
+
+		// koniec menu
+
+		// definicja paneli i ich uk³adu
+
+		westPanel = new Animacja();
+		eastPanel = new JPanel();
+
+		eastPanel.setLayout(new GridLayout(6, 1));
+		// def paneli
+
+		// this.add(westPanel);
+		// this.add(eastPanel);
+
+		// kolory paneli
+		westPanel.addKeyListener(this);
+		westPanel.setBackground(Color.yellow);
+		eastPanel.setBackground(Color.white);
+
+		// suwak
+
+		sliderPanel = new JPanel();
+		sliderPanel.setBackground(Color.white);
+		eastPanel.add(sliderPanel);
+
+		slider = new JSlider(JSlider.HORIZONTAL, Window.SLIDER_INIT, Window.SLIDER_MAX, Window.SLIDER_MIN);
+		slider.setBackground(Color.white);
+		slider.setFont(new Font("Arial", Font.BOLD, 14));
+		slider.addChangeListener(new SliderChangeListener());
+		slider.addKeyListener(this);
+		sliderPanel.add(slider);
+
+		slider.setMinorTickSpacing(380);
+		slider.setMajorTickSpacing(60);
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+
+		textfield = new JTextField(String.format("%d", slider.getValue()));
+		textfield.setPreferredSize(new Dimension(60, 40));
+		textfield.setFont(new Font("Arial", Font.BOLD, 16));
+		// textfield.setForeground(Color.BLUE);
+		textfield.setHorizontalAlignment(textfield.CENTER);
+		
+		sliderPanel.add(textfield);
+
+		// koniec suwaka i jego wartosci
+
+		// sta³a siatki
+
+		siatkaPanel = new JPanel();
+		siatkaPanel.setBackground(Color.white);
+		eastPanel.add(siatkaPanel);
+
+		labeld = new JLabel(String.format("stala siatki w nm, np 2116"));
+		labeld.setForeground(Color.black);
+		labeld.setFont(new Font("Arial", Font.BOLD, 16));
+
+		d = new JTextField("0");
+		d.setPreferredSize(new Dimension(60, 40));
+		d.setFont(new Font("Arial", Font.BOLD, 16));
+		d.setHorizontalAlignment(d.CENTER);
+		// d.setForeground(Color.BLUE);
+		d.addKeyListener(this);
+		siatkaPanel.add(labeld);
+		siatkaPanel.add(d);
+
+		// strza³kowe przesuwanie nr pr¹¿ków
+
+		widmoPanel = new JPanel();
+		widmoPanel.setBackground(Color.white);
+		eastPanel.add(widmoPanel);
+
+		labelnr = new JLabel(String.format("rz¹d widma (0-3)"));
+		labelnr.setForeground(Color.black);
+		labelnr.setFont(new Font("Arial", Font.BOLD, 16));
+
+		value = new SpinnerNumberModel(2, // startowa
+				0, // min wartosc
+				3, // max wartosc
+				1); // kroki
+		n = new JSpinner(value);
+
+		n.setPreferredSize(new Dimension(60, 40));
+		n.setFont(new Font("Arial", Font.BOLD, 16));
+
+		// n.setForeground(Color.BLUE);
+
+		widmoPanel.add(labelnr);
+		widmoPanel.add(n);
+
+		// domyslne
+
+		domyslnePanel1 = new JPanel();
+		domyslnePanel2 = new JPanel();
+
+		domyslnePanel1.setBackground(Color.white);
+		domyslnePanel2.setBackground(Color.white);
+
+		// domyslnePanel.setLayout(new GridLayout(2,1));
+
+		eastPanel.add(domyslnePanel1);
+		eastPanel.add(domyslnePanel2);
+
+		ButtonGroup grupa = new ButtonGroup();
+		JRadioButton dif = new JRadioButton("Wartoœci domyœlne", false),
+				user = new JRadioButton("Wartoœci u¿ytkownika", false);
+
+		dif.setBackground(Color.white);
+		user.setBackground(Color.white);
+
+		dif.setForeground(Color.black);
+		user.setForeground(Color.black);
+
+		dif.setFont(new Font("Arial", Font.BOLD, 16));
+		user.setFont(new Font("Arial", Font.BOLD, 16));
+
+		grupa.add(dif);
+		grupa.add(user);
+		dif.addKeyListener(this);
+		user.addKeyListener(this);
+		dif.addActionListener(domyslneON);
+		user.addActionListener(domyslneOFF);
+
+		// dif = new JRadioButton("Wartosci domyslne");
+		domyslnePanel1.add(dif);
+		// dif.addActionListener(domyslneON);
+
+		// u¿ytkownika
+
+		// user = new JRadioButton("Wartosci u¿ytkownika");
+		domyslnePanel2.add(user);
+		// user.addActionListener(domyslneOFF);
+
+		// start stop
+
+		buttonPanel = new JPanel();
+		buttonPanel.setBackground(Color.white);
+		buttonPanel.addKeyListener(this);
+		eastPanel.add(buttonPanel);
+
+		start = new JButton("START/STOP");
+		start.setBackground(Color.orange);
+		start.addActionListener(poczatek);
+		start.setPreferredSize(new Dimension(150, 40));
+		start.setFont(new Font("Arial", Font.BOLD, 14));
+		buttonPanel.add(start);
+
+		// wyczysc dane
+
+		clear = new JButton("Wyczyœæ dane");
+		clear.setBackground(Color.orange);
+		clear.addActionListener(czysc);
+		clear.setPreferredSize(new Dimension(150, 40));
+		clear.setFont(new Font("Arial", Font.BOLD, 14));
+		buttonPanel.add(clear);
+
+		// jezyk
+
+		language = new JButton("Jêzyk angielski");
+		language.setBackground(Color.orange);
+		language.addActionListener(jezyk);
+		language.setPreferredSize(new Dimension(150, 40));
+		language.setFont(new Font("Arial", Font.BOLD, 14));
+		buttonPanel.add(language);
+
+		// tryb nocny
+
+		night = new JButton("Tryb nocny");
+		night.setBackground(Color.orange);
+		night.addActionListener(noc);
+		night.setPreferredSize(new Dimension(150, 40));
+		night.setFont(new Font("Arial", Font.BOLD, 14));
+		buttonPanel.add(night);
+
+		// dodanie paneli do okna
+		// eastPanel.setLayout(new GridLayout(6, 1)); // jak znajdziemy lepszy layout to
+		// tu go u¿yæ
+		this.add(westPanel);
+		this.add(eastPanel);
+
+	}
+	// klasa przypisujaca wartosc suwaka
+
+	public class SliderChangeListener implements ChangeListener // pole tekstowe z wartoœciami
+	{
+		@Override
+		public void stateChanged(ChangeEvent arg0) {
+			String value = String.format("%d", slider.getValue());
+			textfield.setText(value);
+		}
+	}
+
+	// ActionListenery
+
+	ActionListener zapisz = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+
+			// TODO Auto-generated method stub
+			OutputStreamWriter osw = null;
+			JFileChooser chooser = new JFileChooser();
+			chooser.showOpenDialog(null);
+			try {
+				System.out.println("Otwieram plik!");
+				osw = new OutputStreamWriter(new FileOutputStream(chooser.getSelectedFile().getPath()), // "C:\\Users\\user\\Desktop\\plikDyktandoZapis2.txt"),
+						Charset.forName("UTF-8").newEncoder()); // jak konkretny plik to opcja 2
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				System.out.println("Zapisuje plik!");
+				// osw.write("d³ugoœæ fali; sta³a siatki; rz¹d widma;");
+				osw.write(textfield.getText() + ";" + d.getText() + ";" + n.getValue() + ";"); // tu wpisuje co zapisuje
+				osw.close(); // zawsze zamykac
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	};
+
+	ActionListener wczytaj = new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser chooser = new JFileChooser();
+			chooser.showOpenDialog(null); // w nawiasie ramka do otworzenia
+			MyInput readFromFile = null;
+			try {
+				readFromFile = new MyInput(chooser.getSelectedFile());
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			try {
+				String retText = readFromFile.readString();// po tym dodaje co wczytuje
+				textfield.setText(retText);
+				d.setText(retText);
+				n.setValue(retText);
+				readFromFile.close();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+	};
+
+	ActionListener wyjscie = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			System.exit(0);
+		}
+	};
+
+	// wartosci domyslne
+
+	ActionListener domyslneON = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setEnabled(false);
+			slider.setValue(450);
+			d.setText("2116");
+			value.setValue(2);
+		}
+	};
+
+	ActionListener domyslneOFF = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setEnabled(true);
+		}
+	};
+
+	ActionListener czysc = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setValue(380);
+			d.setText(" ");
+			value.setValue(0);
+
+		}
+	};
+
+	ActionListener noc = new ActionListener() {
+		Boolean isNight = false;
+
+		public void actionPerformed(ActionEvent actionEvent) {
+
+			if (isNight == false) {
+				eastPanel.setBackground(Color.darkGray);
+
+				sliderPanel.setBackground(Color.darkGray);
+				siatkaPanel.setBackground(Color.darkGray);
+				domyslnePanel1.setBackground(Color.darkGray);
+				domyslnePanel2.setBackground(Color.darkGray);
+				widmoPanel.setBackground(Color.darkGray);
+				buttonPanel.setBackground(Color.darkGray);
+
+				slider.setBackground(Color.darkGray);
+				slider.setForeground(Color.white);
+
+				labeld.setForeground(Color.white);
+				labelnr.setForeground(Color.white);
+
+				/*
+				 * dif.setBackground(Color.gray); user.setBackground(Color.gray);
+				 * 
+				 * dif.setForeground(Color.white); user.setForeground(Color.white);
+				 */
+
+				start.setBackground(Color.black);
+				language.setBackground(Color.black);
+				clear.setBackground(Color.black);
+				night.setBackground(Color.black);
+
+				start.setForeground(Color.orange);
+				language.setForeground(Color.orange);
+				clear.setForeground(Color.orange);
+				night.setForeground(Color.orange);
+
+				westPanel.setBackground(Color.DARK_GRAY);
+				isNight = true;
+				westPanel.repaint();
+				eastPanel.repaint();
+			} else {
+				westPanel.setBackground(Color.gray);
+				eastPanel.setBackground(Color.white);
+
+				sliderPanel.setBackground(Color.white);
+				siatkaPanel.setBackground(Color.white);
+				domyslnePanel1.setBackground(Color.white);
+				domyslnePanel2.setBackground(Color.white);
+				widmoPanel.setBackground(Color.white);
+				buttonPanel.setBackground(Color.white);
+
+				slider.setBackground(Color.white);
+				slider.setForeground(Color.black);
+
+				labeld.setForeground(Color.black);
+				labelnr.setForeground(Color.black);
+
+				/*
+				 * dif.setBackground(Color.white); user.setBackground(Color.white);
+				 * 
+				 * dif.setForeground(Color.black); user.setForeground(Color.black);
+				 */
+				start.setBackground(Color.ORANGE);
+				language.setBackground(Color.ORANGE);
+				clear.setBackground(Color.ORANGE);
+				night.setBackground(Color.ORANGE);
+
+				start.setForeground(Color.black);
+				language.setForeground(Color.black);
+				clear.setForeground(Color.black);
+				night.setForeground(Color.black);
+
+				isNight = false;
+				westPanel.repaint();
+				eastPanel.repaint();
+			}
+		}
+	};
+
+	ActionListener jezyk = new ActionListener() {
+		String Par;
+
+		public void actionPerformed(ActionEvent actionEvent) {
+
+			if(Par.lang == "en") {
+				Translator.setLang("pl");
+			} else if(Par.lang == "pl") {
+				Translator.setLang("en");
+			}		
+		}
+	};
+
+	ActionListener poczatek = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			try {
+				int dlugosc = Integer.parseInt(textfield.getText());
+				int stalaSiatki = Integer.parseInt(d.getText());
+				int liczbaPrazkow = (int) n.getValue();
+				// westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc);
+				if (dlugosc < ColorLight.low[0] || dlugosc > ColorLight.low[ColorLight.low.length - 1]) {
+					JOptionPane.showMessageDialog(null, "Wartoœci d³ugoœci fali s¹ z przedzia³u 380-750");
+				} else
+					westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc);
+			} catch (NumberFormatException e) {
+				JOptionPane.showMessageDialog(null, "Trzeba wpisac liczby calkowite!");
+			}
+		}
+	};
+
+	public static void main(String[] args) {
+
+		Window okienko = new Window();
+		okienko.setVisible(true);
+
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		// TODO Auto-generated method stub
+		if (e.getKeyCode() != KeyEvent.VK_ESCAPE) {
+			System.exit(0);
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+
+};

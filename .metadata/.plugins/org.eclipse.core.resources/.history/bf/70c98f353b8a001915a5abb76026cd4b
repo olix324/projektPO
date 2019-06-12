@@ -1,0 +1,9 @@
+package STEFAN;
+
+public class MyInput {
+
+	public MyInput() {
+		// TODO Auto-generated constructor stub
+	}
+
+}

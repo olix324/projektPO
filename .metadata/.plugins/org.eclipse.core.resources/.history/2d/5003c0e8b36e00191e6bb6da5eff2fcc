@@ -1,0 +1,77 @@
+package STEFAN;
+
+import java.awt.Graphics;
+import java.awt.LinearGradientPaint;
+
+import javax.swing.JPanel;
+
+public class Animacja extends JPanel{
+	
+		int n;//to nie s¹ te same co w nawiasie
+		int d;
+		int lambda;
+		int y2tab [];
+		int a;
+		int y1;
+		int x1;
+		int x2;
+		int end;
+		
+	public Animacja() {
+		// TODO Auto-generated constructor stub
+		y2tab = new int [0];
+	}
+	
+	public int countPlus(int x2) {
+		 
+		int y2 = (int)(-0.5*y1 + 0.5*Math.sqrt(y1*y1 - (x2-x1)*(x2-x1) + y1*y1 - a/(1- (n*lambda)/d)));
+		return y2;
+		
+	}
+	public int countMinus(int x2) {
+		 
+		int y2 = (int)(-0.5*y1 - 0.5*Math.sqrt(y1*y1 - (x2-x1)*(x2-x1) + y1*y1 - a/(1- (n*lambda)/d)));
+		return y2;
+		
+	}
+	
+	public void startAnim(int n1, int d1, int lambda1) {
+		
+		this.n = n1; //to oznacza ¿e to z nawiasu jest tym co w klasie
+		this.d = d1;
+		this.lambda = lambda1;
+		//System.out.println(lambda);
+		x1 = 50;
+		y1 = (int)(this.getHeight()/2);
+		end = (int)(this.getWidth()-50);
+		a = (int)(end - x1);
+		
+		y2tab = new int [2*n+1];
+		
+		for(int x2 = x1; x2 < end; x2++) {
+			for(int i = 0; i < 2*this.n; i+=2) {
+				//this.countPlus(x2);
+				//this.countMinus(x2);
+				y2tab[i] = y1+this.countPlus(x2);
+				y2tab[i+1] = y1-this.countMinus(x2);
+			}
+		y2tab[2*this.n] = y1;
+		this.x2 = x2;
+		this.repaint();
+		System.out.println("x2=" + Integer.toString(x2));
+		
+		}
+		
+	}
+	
+	
+	public void paintComponent(Graphics g) {
+		if(y2tab.length != 0) {
+		for(int y2 : y2tab) {
+			g.drawLine(x1, y1, x2, y2);	
+			System.out.println(y2);
+		}
+		}
+		System.out.println("===============");
+	}
+}

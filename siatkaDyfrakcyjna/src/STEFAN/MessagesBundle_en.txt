@@ -1,0 +1,10 @@
+﻿mainFrameTitle = Simulation of diffraction grating
+changeLang = Language
+fileMenu = Menu
+dLabel = Slit separation nm, like 2116
+nLabel = Order (0-3)
+difLabel = Default value
+userLabel = User's value
+startButton = Start
+clearButton = Clear data
+nightButton = Night mode

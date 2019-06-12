@@ -1,0 +1,353 @@
+package STEFAN;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
+import java.awt.GridLayout;
+import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+public class Window extends JFrame {
+
+	JMenu menu;
+	JMenuBar menuBar;
+	JMenuItem exit;
+	JMenuItem save;
+	JMenuItem read;
+	JMenuItem back;
+
+	String tytul;
+	JSlider slider;
+	JRadioButton dif;
+	JRadioButton user;
+	JTextField textfield;
+	JSpinner n; // to to ze strza³kami i to jest n ze wzoru - rz¹d widma(nr pr¹¿ka)
+	SpinnerModel value; // wartoœci dla d
+	JTextField d; // zmieni³am na d z n bo we wzorze d to sta³a siatki
+	JLabel label;
+	JLabel labelnr; // do pr¹¿ków
+	JLabel labeld; // opis do sta³ej siatki
+	JButton clear;
+	JButton language;
+	JButton night;
+	JButton start;
+
+	Animacja westPanel; // lewy
+	JPanel eastPanel; // prawy
+	// Boolean isNight = true;
+	static final int SLIDER_MIN = ColorLight.low[0];
+	static final int SLIDER_MAX = ColorLight.low[ColorLight.low.length - 1];
+	static final int SLIDER_INIT = 380;
+
+	public Window() throws HeadlessException {
+		// TODO Auto-generated constructor stub
+
+		/*
+		 * // ActionListenery
+		 * 
+		 * ActionListener wyjscie = new ActionListener() { public void
+		 * actionPerformed(ActionEvent actionEvent) { System.exit(0); } };
+		 * 
+		 * // wartosci domyslne
+		 * 
+		 * ActionListener domyslneON = new ActionListener() { public void
+		 * actionPerformed(ActionEvent actionEvent) { slider.setEnabled(false);
+		 * slider.setValue(450); d.setText("2116"); value.setValue(4); } };
+		 * 
+		 * ActionListener domyslneOFF = new ActionListener() { public void
+		 * actionPerformed(ActionEvent actionEvent) { slider.setEnabled(true); } };
+		 * 
+		 * ActionListener czysc = new ActionListener() { public void
+		 * actionPerformed(ActionEvent actionEvent) { slider.setValue(380);
+		 * d.setText(" "); value.setValue(0);
+		 * 
+		 * } };
+		 * 
+		 * ActionListener noc = new ActionListener() { Boolean isNight = false;
+		 * 
+		 * public void actionPerformed(ActionEvent actionEvent) {
+		 * 
+		 * if(isNight == false) { eastPanel.setBackground(Color.gray);
+		 * westPanel.setBackground(Color.DARK_GRAY); isNight = true;
+		 * westPanel.repaint(); eastPanel.repaint(); } else {
+		 * westPanel.setBackground(Color.gray); eastPanel.setBackground(Color.white);
+		 * isNight = false; westPanel.repaint(); eastPanel.repaint(); } } };
+		 * 
+		 * ActionListener jezyk = new ActionListener() { Boolean ang = false;
+		 * 
+		 * public void actionPerformed(ActionEvent actionEvent) {
+		 * 
+		 * if(ang == false) { tytul = "Simulation of diffraction grating";
+		 * 
+		 * ang = true; } else { tytul = "Symulacja siatki dyfrakcyjnej"; ang = false; }
+		 * } };
+		 * 
+		 * ActionListener poczatek = new ActionListener() { public void
+		 * actionPerformed(ActionEvent actionEvent) { try { int dlugosc =
+		 * Integer.parseInt(textfield.getText()); int stalaSiatki =
+		 * Integer.parseInt(d.getText()); int liczbaPrazkow = (int) n.getValue();
+		 * //westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc); if(dlugosc <
+		 * ColorLight.low[0] || dlugosc > ColorLight.low[ColorLight.low.length-1]) {
+		 * JOptionPane.showMessageDialog(null,
+		 * "Wartoœci d³ugoœci fali s¹ z przedzia³u 380-750"); }else
+		 * westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc); } catch
+		 * (NumberFormatException e) { JOptionPane.showMessageDialog(null,
+		 * "Trzeba wpisac liczby calkowite!"); } } };
+		 */
+
+		// rozmiar okna, zamykanie i layout
+
+		this.setSize(800, 600);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		this.setLayout(new GridLayout(1, 2));
+
+		// koniec okna
+
+		tytul = new String();
+		tytul = "Symulacja siatki dyfrakcyjnej";
+		this.setTitle(tytul);
+
+		// menu
+		menuBar = new JMenuBar();
+		this.setJMenuBar(menuBar);
+
+		menu = new JMenu("Menu");
+		menuBar.add(menu);
+
+		save = new JMenuItem("Zapis do pliku");
+		menu.add(save);
+		// save.addActionListener(zapisz);
+
+		read = new JMenuItem("Wczytywanie z pliku");
+		menu.add(read);
+		// read.addActionListener(wczytaj);
+
+		back = new JMenuItem("Cofnij");
+		menu.add(back);
+		// back.addActionListener(cofnij);
+
+		exit = new JMenuItem("Wyjscie");
+		menu.add(exit);
+		exit.addActionListener(wyjscie);
+
+		// koniec menu
+
+		// definicja paneli i ich uk³adu
+
+		westPanel = new Animacja();
+		eastPanel = new JPanel();
+
+		// def paneli
+
+		this.add(westPanel);
+		this.add(eastPanel);
+
+		// kolory paneli
+
+		westPanel.setBackground(Color.gray);
+		eastPanel.setBackground(Color.white);
+
+		// suwak
+
+		slider = new JSlider(JSlider.HORIZONTAL, Window.SLIDER_INIT, Window.SLIDER_MAX, Window.SLIDER_MIN);
+		slider.addChangeListener(new SliderChangeListener());
+		eastPanel.add(slider);
+
+		slider.setMinorTickSpacing(380);
+		slider.setMajorTickSpacing(60);
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+
+		textfield = new JTextField(String.format("%d", slider.getValue()));
+		textfield.setPreferredSize(new Dimension(50, 50));
+		eastPanel.add(textfield);
+
+		// koniec suwaka i jego wartosci
+
+		// sta³a siatki
+
+		labeld = new JLabel(String.format("stala siatki w nm, np 2116"));
+		d = new JTextField("0");
+		d.setPreferredSize(new Dimension(200, 50));
+		eastPanel.add(labeld);
+		eastPanel.add(d);
+
+		// strza³kowe przesuwanie nr pr¹¿ków
+
+		labelnr = new JLabel(String.format("Rz¹d widma (0-3)"));
+
+		value = new SpinnerNumberModel(2, // startowa
+				0, // min wartosc
+				3, // max wartosc
+				1); // kroki
+		n = new JSpinner(value);
+
+		eastPanel.add(labelnr);
+		eastPanel.add(n);
+
+		// domyslne
+
+		ButtonGroup grupa = new ButtonGroup();
+		JRadioButton dif = new JRadioButton("Wartoœci domyœlne", false),
+				user = new JRadioButton("Wartoœci u¿ytkownika", false);
+
+		grupa.add(dif);
+		grupa.add(user);
+		dif.addActionListener(domyslneON);
+		user.addActionListener(domyslneOFF);
+
+		// dif = new JRadioButton("Wartosci domyslne");
+		eastPanel.add(dif);
+		// dif.addActionListener(domyslneON);
+
+		// u¿ytkownika
+
+		// user = new JRadioButton("Wartosci u¿ytkownika");
+		eastPanel.add(user);
+		// user.addActionListener(domyslneOFF);
+
+		// start stop
+
+		start = new JButton("START/STOP");
+		start.addActionListener(poczatek);
+		eastPanel.add(start);
+
+		// wyczysc dane
+
+		clear = new JButton("Wyczyœæ dane");
+		clear.addActionListener(czysc);
+		eastPanel.add(clear);
+
+		// jezyk
+
+		language = new JButton("Jêzyk angielski");
+		language.addActionListener(jezyk);
+		eastPanel.add(language);
+
+		// tryb nocny
+
+		night = new JButton("Tryb nocny");
+		night.addActionListener(noc);
+		eastPanel.add(night);
+
+		// dodanie paneli do okna
+		eastPanel.setLayout(new GridLayout(6, 1)); // jak znajdziemy lepszy layout to tu go u¿yæ
+		this.add(westPanel);
+		this.add(eastPanel);
+
+	}
+	// klasa przypisujaca wartosc suwaka
+
+	public class SliderChangeListener implements ChangeListener // pole tekstowe z wartoœciami
+	{
+		@Override
+		public void stateChanged(ChangeEvent arg0) {
+			String value = String.format("%d", slider.getValue());
+			textfield.setText(value);
+		}
+	}
+
+	// ActionListenery
+
+	ActionListener wyjscie = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			System.exit(0);
+		}
+	};
+
+	// wartosci domyslne
+
+	ActionListener domyslneON = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setEnabled(false);
+			slider.setValue(450);
+			d.setText("2116");
+			value.setValue(2);
+		}
+	};
+
+	ActionListener domyslneOFF = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setEnabled(true);
+		}
+	};
+
+	ActionListener czysc = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			slider.setValue(380);
+			d.setText(" ");
+			value.setValue(0);
+
+		}
+	};
+
+	ActionListener noc = new ActionListener() {
+		Boolean isNight = false;
+
+		public void actionPerformed(ActionEvent actionEvent) {
+
+			if (isNight == false) {
+				eastPanel.setBackground(Color.gray);
+				westPanel.setBackground(Color.DARK_GRAY);
+				isNight = true;
+				westPanel.repaint();
+				eastPanel.repaint();
+			} else {
+				westPanel.setBackground(Color.gray);
+				eastPanel.setBackground(Color.white);
+				isNight = false;
+				westPanel.repaint();
+				eastPanel.repaint();
+			}
+		}
+	};
+
+	ActionListener jezyk = new ActionListener() {
+		Boolean ang = false;
+
+		public void actionPerformed(ActionEvent actionEvent) {
+
+			if (ang == false) {
+				tytul = "Simulation of diffraction grating";
+
+				ang = true;
+			} else {
+				tytul = "Symulacja siatki dyfrakcyjnej";
+				ang = false;
+			}
+		}
+	};
+
+	ActionListener poczatek = new ActionListener() {
+		public void actionPerformed(ActionEvent actionEvent) {
+			try {
+				int dlugosc = Integer.parseInt(textfield.getText());
+				int stalaSiatki = Integer.parseInt(d.getText());
+				int liczbaPrazkow = (int) n.getValue();
+				// westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc);
+				if (dlugosc < ColorLight.low[0] || dlugosc > ColorLight.low[ColorLight.low.length - 1]) {
+					JOptionPane.showMessageDialog(null, "Wartoœci d³ugoœci fali s¹ z przedzia³u 380-750");
+				} else
+					westPanel.startAnim(liczbaPrazkow, stalaSiatki, dlugosc);
+			} catch (NumberFormatException e) {
+				JOptionPane.showMessageDialog(null, "Trzeba wpisac liczby calkowite!");
+			}
+		}
+	};
+
+	public static void main(String[] args) {
+
+		Window okienko = new Window();
+		okienko.setVisible(true);
+
+	}
+
+};

@@ -1,0 +1,42 @@
+package STEFAN;
+
+import java.awt.Graphics;
+import java.awt.LinearGradientPaint;
+
+import javax.swing.JPanel;
+
+public class Animacja extends JPanel{
+	
+		int n;//to nie s¹ te same co w nawiasie
+		int d;
+		int lambda;
+		
+	public Animacja() {
+		// TODO Auto-generated constructor stub
+
+	}
+	
+	public void count(int x2) {
+		 
+	}
+	
+	public void startAnim(int n1, int d1, int lambda1) {
+		
+		this.n = n1; //to oznacza ¿e to z nawiasu jest tym co w klasie
+		this.d = d1;
+		this.lambda = lambda1;
+		//System.out.println(lambda);
+		for(int x2 = 50; x2 < this.getWidth()-50; x2++) {
+		this.count(x2);
+		System.out.println(x2);
+		}
+	}
+	
+	
+	public void paintComponent(Graphics g) {
+		
+		
+		g.drawLine(50, 250, 250, 250);
+		
+	}
+}

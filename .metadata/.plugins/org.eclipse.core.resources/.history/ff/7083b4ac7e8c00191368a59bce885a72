@@ -1,0 +1,9 @@
+package STEFAN;
+
+public class ComponntLabel {
+
+	public ComponntLabel() {
+		// TODO Auto-generated constructor stub
+	}
+
+}
